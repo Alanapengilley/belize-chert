@@ -1,0 +1,29 @@
+---
+
+title: ""
+author: "Alana Pengilley"
+date: ""
+output:
+  html_document: default
+  pdf_document: default
+  
+---
+
+## Load in Packages required for analysis 
+
+```{r}
+library(tidyverse)
+
+```
+
+# Load and clean Data 
+
+## load in dataframe 
+
+```{r}
+df_Geo <- read.csv("Geo Data (MURR).csv") 
+View(df_Geo)
+
+df_Cul <- read.csv("Cul Data (MURR).csv")
+
+```

@@ -5,10 +5,9 @@ install.packages("Rtsne")
 library(Rtsne)
 library(readxl) 
 
-
 # Load the geochemical dataset
 naa <- read.csv("Technique Comparison/INAA_comparison_dataset.csv")
-#View(naa) #for viewing dataset
+View(naa) 
 
 #remove non numeric data before running PCA
 numeric_naa <- naa[, sapply(naa, is.numeric)]

@@ -1,4 +1,4 @@
-#Random Forest of NAA Data
+#Random Forest of NAA Data and LAICPMS Data - technique Comparison 
 #----------------------------------------------------------
 # Load Libraries
 #----------------------------------------------------------
@@ -14,18 +14,18 @@ library(MLmetrics)
 #----------------------------------------------------------
 # Load Data
 #----------------------------------------------------------
-naa <- read.csv("Technique Comparison/INAA_comparison_dataset.csv")
+laicpms <- read.csv("Technique Comparison/LAICPMS_comparison_dataset.csv")
 
 # Remove non-informative coloring elements
-naa <- naa[, !(names(naa) %in% c("SiO2", "CaCO3", "Ni", "Fe2O3", "Cr", "Mn"))]
+laicpms <- laicpms[, !(names(laicpms) %in% c("SiO2", "CaCO3", "Ni", "Fe2O3", "Cr", "Mn"))]
 
 # Make sure Group is factor
-naa$Group <- as.factor(naa$Group)
-naa$Group <- as.factor(make.names(naa$Group))
+laicpms$Group <- as.factor(laicpms$Group)
+laicpms$Group <- as.factor(make.names(laicpms$Group))
 
 # Remove sample ID column
-if ("ANID" %in% names(naa)) {
-  naa <- naa %>% dplyr::select(-ANID)
+if ("ANID" %in% names(laicpms)) {
+  laicpms <- laicpms %>% dplyr::select(-ANID)
 }
 
 
@@ -140,7 +140,7 @@ run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
   weighted_precision <- sum(precision_scores * class_weights)
   weighted_recall <- sum(recall_scores * class_weights)
   
-  cat(sprintf("Accuracy: %.2f%% | Weighted F1: %.3f\n", acc * 100, weighted_f1))
+  cat(sprintf("✅ Accuracy: %.2f%% | Weighted F1: %.3f\n", acc * 100, weighted_f1))
   
   # Variable importance
   var_imp <- varImp(rf_model, scale = TRUE)$importance
@@ -173,7 +173,7 @@ results <- lapply(1:nrow(configs), function(i) {
   cat("\n=============================\n")
   cat("Running configuration", i, "of", nrow(configs), "\n")
   cat("=============================\n")
-  run_rf_test(naa,
+  run_rf_test(laicpms,
               transform = configs$transform[i],
               balance = configs$balance[i])
 })
@@ -199,7 +199,7 @@ print(summary_df[best_idx, ])
 best_result <- results[[best_idx]]
 
 #----------------------------------------------------------
-#  Confusion Matrix for best model
+# 📊 Confusion Matrix for best model
 #----------------------------------------------------------
 cm <- best_result$confusion
 cm_df <- as.data.frame(cm$table)
@@ -208,22 +208,22 @@ colnames(cm_df) <- c("Predicted", "Actual", "Freq")
 ggplot(cm_df, aes(x = Actual, y = Predicted, fill = Freq)) +
   geom_tile(color = "white") +
   geom_text(aes(label = Freq), color = "black", size = 3) +
-  scale_fill_gradient(low = "white", high = "#FF5733") +
-  labs(title = "NAA Confusion Matrix (Test Set)", x = "Actual Class", y = "Predicted Class") +
+  scale_fill_gradient(low = "white", high = "orange") +
+  labs(title = "LA-ICP-MS Confusion Matrix (Test Set)", x = "Actual Class", y = "Predicted Class") +
   theme_minimal(base_size = 12) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #----------------------------------------------------------
-# Top 20 Variable Importances
+# Top 20 Variable Importance
 #----------------------------------------------------------
 top_vars <- best_result$var_imp %>%
   arrange(desc(Overall)) %>%
   slice(1:20)
 
 ggplot(top_vars, aes(x = reorder(Variable, Overall), y = Overall)) +
-  geom_col(fill = "#FF5733") +
+  geom_col(fill = "orange") +
   coord_flip() +
-  labs(title = "Top 20 Variable Importances (NAA)",
+  labs(title = "Top 20 Variable Importances (LA-ICP-MS)",
        x = "Variable",
        y = "Importance") +
   theme_minimal(base_size = 12)

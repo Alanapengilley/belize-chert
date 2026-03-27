@@ -1,7 +1,7 @@
-#Random Forest of NAA Data
 #----------------------------------------------------------
-# Load Libraries
+# Random Forest (RF) of NAA Dataset 
 #----------------------------------------------------------
+
 # install.packages(c("randomForest", "caret", "dplyr", "readxl"))
 library(randomForest)
 library(caret)
@@ -27,7 +27,6 @@ naa$Group <- as.factor(make.names(naa$Group))
 if ("ANID" %in% names(naa)) {
   naa <- naa %>% dplyr::select(-ANID)
 }
-
 
 #----------------------------------------------------------
 # Function to run Random Forest with weighted F1
@@ -55,7 +54,7 @@ run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
   tbl <- table(data$Group)
   if (any(tbl < 3)) {
     small <- names(tbl[tbl < 3])
-    cat("⚠️ Removing tiny classes:", paste(small, collapse = ", "), "\n")
+    cat("Removing tiny classes:", paste(small, collapse = ", "), "\n")
     data <- data %>% filter(!Group %in% small)
   }
   
@@ -194,7 +193,7 @@ print(summary_df)
 
 # Identify best model
 best_idx <- which.max(sapply(results, function(x) x$f1_weighted))
-cat("\n🏆 Best configuration (by weighted F1):\n")
+cat("\Best configuration (by weighted F1):\n")
 print(summary_df[best_idx, ])
 best_result <- results[[best_idx]]
 

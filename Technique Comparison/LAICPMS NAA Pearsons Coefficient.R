@@ -1,38 +1,44 @@
-#PEARSONS PRODUCT-MOMENT CORRELATION COEFFICIENT (r) 
-#calculated for each element between the comparison datasets 
+#----------------------------------------------------------
+# Application of Pearsons Product-moment Correlation Coefficient 
+# Calculated for each element between NAA and LAICPMS datasets 
+#----------------------------------------------------------
 
-#install packages 
+# Install the package (if you haven't already)
 install.packages("writexl")
 
-#LOAD IN NECESSARY PACKAGES 
+# Load the library
 library(ggplot2)
 library(reshape2)
 library(writexl)
 
-#LOAD IN DATASETS 
-#LA-ICP-MS DATASET
+#----------------------------------------------------------
+# Load Data
+#----------------------------------------------------------
+
+# LA-ICP-MS 
 laicpms <- read.csv("Technique Comparison/LAICPMS_comparison_dataset.csv")
 
-#INAA Dataset
-inaa <- read.csv("Technique Comparison/INAA_comparison_dataset.csv")
+# NAA 
+naa <- read.csv("Technique Comparison/INAA_comparison_dataset.csv")
 
-#PREPROCESSING OF DATA 
-
+#----------------------------------------------------------
+# Pre-processing 
+#----------------------------------------------------------
 # Check if they have the same column names
-common_elements_1 <- intersect(colnames(laicpms), colnames(inaa))
+common_elements_1 <- intersect(colnames(laicpms), colnames(naa))
 
 # Select only the common elements (geochemical elements) from both datasets
 laicpms_common <- laicpms[, common_elements_1]
-inaa_common <- inaa[, common_elements_1]
+naa_common <- naa[, common_elements_1]
 
 # Ensure that both datasets are numeric (i.e., contain only numeric data)
 df_laicpms_common_1 <- laicpms_common %>% select_if(is.numeric)
-df_inaa_common_1 <- inaa_common %>% select_if(is.numeric)
+df_naa_common_1 <- naa_common %>% select_if(is.numeric)
 
-#CALCULATE PEARSON'S COEFFICIENT 
+### Calculate PEARSON'S Coefficient 
 
 # Calculate Pearson's correlation between the corresponding elements in both datasets
-correlation_matrix_comparison <- cor(df_laicpms_common_1, df_inaa_common_1, method = "pearson")
+correlation_matrix_comparison <- cor(df_laicpms_common_1, df_naa_common_1, method = "pearson")
 
 # Print the correlation matrix
 print(correlation_matrix_comparison)
@@ -51,13 +57,14 @@ ggplot(cor_melted_comparison, aes(Var1, Var2, fill = value)) +
 correlation_df_comparison <- as.data.frame(as.table(correlation_matrix_comparison))
 
 # Rename the columns for better clarity
-colnames(correlation_df_comparison) <- c("LAICPMS", "INAA", "Correlation_Coefficient")
+colnames(correlation_df_comparison) <- c("LAICPMS", "NAA", "Correlation_Coefficient")
 
 # Filter to keep only the rows where the element names match between LAICPMS and EDXRF
-matching_elements_df_comparison <- correlation_df_comparison %>% filter(LAICPMS == INAA)
+matching_elements_df_comparison <- correlation_df_comparison %>% filter(LAICPMS == NAA)
 
 # Print the resulting correlation table
 print(matching_elements_df_comparison)
 
 #export final table
 write_xlsx(matching_elements_df_comparison, "Technique Comparison/Matching_Correlation_Table_LAICPMS_INAA.xlsx")
+

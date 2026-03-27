@@ -1,3 +1,7 @@
+#----------------------------------------------------------
+# Application of PCA to LAICPMS data 
+#----------------------------------------------------------
+
 #install packages if not already installed 
 if (!require(dbscan)) install.packages("dbscan", dependencies = TRUE)
 if (!require(ggplot2)) install.packages("ggplot2", dependencies = TRUE)
@@ -8,7 +12,6 @@ library(dbscan)  # For LOF
 library(ggplot2)  # For plotting
 library(dplyr) # For grouping and data manipulation
 library(readxl) 
-
 
 #----------------------------------------------------------
 # Load Data

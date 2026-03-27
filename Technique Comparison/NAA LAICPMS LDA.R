@@ -1,3 +1,7 @@
+#----------------------------------------------------------
+# Linear Discriminant Analysis (LDA) of NAA and LAICPMS 
+#----------------------------------------------------------
+
 #Load in necessary packages 
 library(readxl)
 library(dplyr)

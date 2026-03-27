@@ -1,3 +1,6 @@
+#----------------------------------------------------------
+# Application of t-SNE to LAICPMS data 
+#----------------------------------------------------------
 # Install the Rtsne package (if you haven't already)
 install.packages("Rtsne")
 
@@ -5,17 +8,24 @@ install.packages("Rtsne")
 library(Rtsne)
 library(readxl) 
 
-# Load the geochemical dataset
+#----------------------------------------------------------
+# Load Data
+#----------------------------------------------------------
 laicpms <- read.csv("Technique Comparison/LAICPMS_comparison_dataset.csv")
 View(laicpms)
 
-#remove non numeric data before running PCA
+#----------------------------------------------------------
+# Pre-processing 
+#----------------------------------------------------------
+# Remove non numeric data before running PCA
 numeric_laicpms <- laicpms[, sapply(laicpms, is.numeric)]
 
 # Scale the numeric columns
 laicpms_scaled <- scale(numeric_laicpms)
 
-
+#----------------------------------------------------------
+# Apply t-SNE
+#----------------------------------------------------------
 # Apply t-SNE to the scaled data (e.g., reducing to 2 dimensions)
 tsne_results_laicpms <- Rtsne(laicpms_scaled, dims = 3, perplexity = 15, pca = T, check_duplicates = F)
 
@@ -27,7 +37,9 @@ tsne_data_laicpms <- tsne_results_laicpms$Y
 tsne_laicpms <- data.frame(tsne_data_laicpms, Location = laicpms$Group)
 print(tsne_laicpms)
 
-# Plot the results using ggplot2
+#----------------------------------------------------------
+# Plot t-SNE (using ggplot)
+#----------------------------------------------------------
 library(ggplot2)
 library(viridis)
 

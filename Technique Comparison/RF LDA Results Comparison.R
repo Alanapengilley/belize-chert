@@ -1,7 +1,5 @@
 #---------------------------------------------------------
-#Results of comparing group size effects on RF and LDA, two groups were tested, one with material seperated by broad regions (CBZ and RB) and the other with
-#all the source groups treated individually (20 sources)
-
+#Results of comparing LDA and RF applications to NAA and LAICPMS
 #----------------------------------------------------------
 # Install patchwork if needed
 install.packages("patchwork")
@@ -20,6 +18,7 @@ data <- data.frame(
 )
 
 data
+
 ##------------------------------------------
 #plot accuracy
 #-------------------------------------------

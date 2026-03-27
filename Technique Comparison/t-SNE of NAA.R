@@ -1,3 +1,6 @@
+#----------------------------------------------------------
+# Application of t-SNE to NAA data 
+#----------------------------------------------------------
 # Install the Rtsne package (if you haven't already)
 install.packages("Rtsne")
 
@@ -5,16 +8,24 @@ install.packages("Rtsne")
 library(Rtsne)
 library(readxl) 
 
-# Load the geochemical dataset
+#----------------------------------------------------------
+# Load Data
+#----------------------------------------------------------
 naa <- read.csv("Technique Comparison/INAA_comparison_dataset.csv")
 View(naa) 
 
-#remove non numeric data before running PCA
+#----------------------------------------------------------
+# Pre-processing 
+#----------------------------------------------------------
+# Remove non numeric data before running PCA
 numeric_naa <- naa[, sapply(naa, is.numeric)]
 
 # Scale the numeric columns
 naa_scaled <- scale(numeric_naa)
 
+#----------------------------------------------------------
+# Apply t-SNE
+#----------------------------------------------------------
 # Apply t-SNE to the scaled data (e.g., reducing to 2 dimensions)
 tsne_results_naa <- Rtsne(naa_scaled, dims = 3, perplexity = 15, pca = T, check_duplicates = F)
 
@@ -26,7 +37,9 @@ tsne_data_naa <- tsne_results_naa$Y
 tsne_naa <- data.frame(tsne_data_naa, Location = naa$Group)
 print(tsne_naa)
 
-# Plot the results using ggplot2
+#----------------------------------------------------------
+# Plot t-SNE (using ggplot)
+#----------------------------------------------------------
 library(ggplot2)
 library(viridis)
 

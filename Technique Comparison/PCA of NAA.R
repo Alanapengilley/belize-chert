@@ -1,3 +1,7 @@
+#----------------------------------------------------------
+# Application of PCA to NAA data 
+#----------------------------------------------------------
+
 #install packages if not already installed 
 if (!require(dbscan)) install.packages("dbscan", dependencies = TRUE)
 if (!require(ggplot2)) install.packages("ggplot2", dependencies = TRUE)
@@ -12,7 +16,6 @@ library(dplyr) # For grouping and data manipulation
 library(readxl) 
 library(cowplot)
 library(ggrepel) # For plotting
-
 
 #----------------------------------------------------------
 # Load Data

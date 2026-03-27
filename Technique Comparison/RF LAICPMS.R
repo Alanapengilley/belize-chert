@@ -1,7 +1,7 @@
-#Random Forest of NAA Data and LAICPMS Data - technique Comparison 
 #----------------------------------------------------------
-# Load Libraries
+# Random Forest (RF) of LAICPMS Dataset 
 #----------------------------------------------------------
+
 # install.packages(c("randomForest", "caret", "dplyr", "readxl"))
 library(randomForest)
 library(caret)
@@ -34,7 +34,7 @@ if ("ANID" %in% names(laicpms)) {
 #----------------------------------------------------------
 run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
   
-  cat("\n🔹 Transform:", transform, "| Balance:", balance, "\n")
+  cat("\Transform:", transform, "| Balance:", balance, "\n")
   
   # Ensure target is factor
   data$Group <- as.factor(make.names(data$Group))
@@ -55,7 +55,7 @@ run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
   tbl <- table(data$Group)
   if (any(tbl < 3)) {
     small <- names(tbl[tbl < 3])
-    cat("⚠️ Removing tiny classes:", paste(small, collapse = ", "), "\n")
+    cat("Removing tiny classes:", paste(small, collapse = ", "), "\n")
     data <- data %>% filter(!Group %in% small)
   }
   
@@ -140,7 +140,7 @@ run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
   weighted_precision <- sum(precision_scores * class_weights)
   weighted_recall <- sum(recall_scores * class_weights)
   
-  cat(sprintf("✅ Accuracy: %.2f%% | Weighted F1: %.3f\n", acc * 100, weighted_f1))
+  cat(sprintf("Accuracy: %.2f%% | Weighted F1: %.3f\n", acc * 100, weighted_f1))
   
   # Variable importance
   var_imp <- varImp(rf_model, scale = TRUE)$importance
@@ -194,7 +194,7 @@ print(summary_df)
 
 # Identify best model
 best_idx <- which.max(sapply(results, function(x) x$f1_weighted))
-cat("\n🏆 Best configuration (by weighted F1):\n")
+cat("\Best configuration (by weighted F1):\n")
 print(summary_df[best_idx, ])
 best_result <- results[[best_idx]]
 

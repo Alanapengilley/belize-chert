@@ -1,7 +1,7 @@
 #----------------------------------------------------------
 # Application of t-SNE to LAICPMS data 
 #----------------------------------------------------------
-# Install the Rtsne package (if you haven't already)
+# Install the Rtsne package
 install.packages("Rtsne")
 
 # Load the library
@@ -12,22 +12,41 @@ library(readxl)
 # Load Data
 #----------------------------------------------------------
 laicpms <- read.csv("Technique Comparison/LAICPMS_comparison_dataset.csv")
-View(laicpms)
 
 #----------------------------------------------------------
 # Pre-processing 
 #----------------------------------------------------------
-# Remove non numeric data before running PCA
+#remove non numeric data before running PCA
 numeric_laicpms <- laicpms[, sapply(laicpms, is.numeric)]
 
-# Scale the numeric columns
-laicpms_scaled <- scale(numeric_laicpms)
+
+# Multiplicative zero replacement
+laicpms_replaced <- cmultRepl(
+  numeric_laicpms,
+  label = 0,
+  method = "CZM"
+)
+
+
+# CLR Transformation (instead of log10)
+clr_laicpms <- clr(acomp(laicpms_replaced))
+
+clr_laicpms <- as.data.frame(clr_laicpms)
+
+colnames(clr_laicpms) <- colnames(numeric_laicpms)
+
+# Standardize CLR-transformed variables 
+clr_laicpms_scaled <- scale(
+  clr_laicpms,
+  center = TRUE,
+  scale = TRUE
+)
 
 #----------------------------------------------------------
 # Apply t-SNE
 #----------------------------------------------------------
 # Apply t-SNE to the scaled data (e.g., reducing to 2 dimensions)
-tsne_results_laicpms <- Rtsne(laicpms_scaled, dims = 3, perplexity = 15, pca = T, check_duplicates = F)
+tsne_results_laicpms <- Rtsne(clr_laicpms_scaled, dims = 3, perplexity = 15, pca = T, check_duplicates = F)
 
 # Extract the t-SNE results (coordinates in 2D)
 tsne_data_laicpms <- tsne_results_laicpms$Y

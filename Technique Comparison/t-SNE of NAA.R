@@ -1,7 +1,7 @@
 #----------------------------------------------------------
 # Application of t-SNE to NAA data 
 #----------------------------------------------------------
-# Install the Rtsne package (if you haven't already)
+# Install the Rtsne package
 install.packages("Rtsne")
 
 # Load the library
@@ -12,7 +12,6 @@ library(readxl)
 # Load Data
 #----------------------------------------------------------
 naa <- read.csv("Technique Comparison/INAA_comparison_dataset.csv")
-View(naa) 
 
 #----------------------------------------------------------
 # Pre-processing 
@@ -20,14 +19,33 @@ View(naa)
 # Remove non numeric data before running PCA
 numeric_naa <- naa[, sapply(naa, is.numeric)]
 
-# Scale the numeric columns
-naa_scaled <- scale(numeric_naa)
 
-#----------------------------------------------------------
+# Multiplicative zero replacement
+naa_replaced <- cmultRepl(
+  numeric_naa,
+  label = 0,
+  method = "CZM"
+)
+
+# CLR Transformation (instead of log10)
+clr_naa <- clr(acomp(naa_replaced))
+
+clr_naa <- as.data.frame(clr_naa)
+
+colnames(clr_naa) <- colnames(numeric_naa)
+
+# Standardize CLR-transformed variables 
+clr_naa_scaled <- scale(
+  clr_naa,
+  center = TRUE,
+  scale = TRUE
+)
+
+#----------------------------------------------------`````------
 # Apply t-SNE
 #----------------------------------------------------------
 # Apply t-SNE to the scaled data (e.g., reducing to 2 dimensions)
-tsne_results_naa <- Rtsne(naa_scaled, dims = 3, perplexity = 15, pca = T, check_duplicates = F)
+tsne_results_naa <- Rtsne(clr_naa_scaled, dims = 3, perplexity = 15, pca = T, check_duplicates = F)
 
 # Extract the t-SNE results (coordinates in 2D)
 tsne_data_naa <- tsne_results_naa$Y

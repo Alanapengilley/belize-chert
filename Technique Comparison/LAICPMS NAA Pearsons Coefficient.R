@@ -3,7 +3,7 @@
 # Calculated for each element between NAA and LAICPMS datasets 
 #----------------------------------------------------------
 
-# Install the package (if you haven't already)
+# Install the package
 install.packages("writexl")
 
 # Load the library
@@ -11,9 +11,8 @@ library(ggplot2)
 library(reshape2)
 library(writexl)
 
-#----------------------------------------------------------
-# Load Data
-#----------------------------------------------------------
+
+## Load Data --------------------
 
 # LA-ICP-MS 
 laicpms <- read.csv("Technique Comparison/LAICPMS_comparison_dataset.csv")
@@ -21,9 +20,9 @@ laicpms <- read.csv("Technique Comparison/LAICPMS_comparison_dataset.csv")
 # NAA 
 naa <- read.csv("Technique Comparison/INAA_comparison_dataset.csv")
 
-#----------------------------------------------------------
-# Pre-processing 
-#----------------------------------------------------------
+
+## Pre-processing ---------------
+
 # Check if they have the same column names
 common_elements_1 <- intersect(colnames(laicpms), colnames(naa))
 
@@ -35,7 +34,7 @@ naa_common <- naa[, common_elements_1]
 df_laicpms_common_1 <- laicpms_common %>% select_if(is.numeric)
 df_naa_common_1 <- naa_common %>% select_if(is.numeric)
 
-### Calculate PEARSON'S Coefficient 
+### Calculate PEARSON'S Coefficient ----------------
 
 # Calculate Pearson's correlation between the corresponding elements in both datasets
 correlation_matrix_comparison <- cor(df_laicpms_common_1, df_naa_common_1, method = "pearson")

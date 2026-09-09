@@ -2,14 +2,15 @@
 # Random Forest (RF) of LAICPMS Dataset 
 #----------------------------------------------------------
 
-# install.packages(c("randomForest", "caret", "dplyr", "readxl"))
+# install.packages
 library(randomForest)
 library(caret)
 library(dplyr)
 library(readxl)
 library(ggplot2)
 library(writexl)
-library(MLmetrics)
+library(zCompositions)
+library(compositions)
 
 #----------------------------------------------------------
 # Load Data
@@ -34,7 +35,7 @@ if ("ANID" %in% names(laicpms)) {
 #----------------------------------------------------------
 run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
   
-  cat("\Transform:", transform, "| Balance:", balance, "\n")
+  cat("\nTransform:", transform, "| Balance:", balance, "\n")
   
   # Ensure target is factor
   data$Group <- as.factor(make.names(data$Group))
@@ -59,14 +60,56 @@ run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
     data <- data %>% filter(!Group %in% small)
   }
   
-  # Optional log10 transformation
-  if (transform) {
-    data <- data %>% mutate(across(where(is.numeric), ~ log10(. + 1)))
+  # apply selected transformation
+  if (transform == "Log10") {
+    
+    # Log10 transformation
+    numeric_data <- data %>% dplyr::select(-Group)
+    
+    numeric_data <- numeric_data %>%
+      mutate(across(where(is.numeric), ~ log10(. + 1)))
+    
+    group <- data$Group
+    
+    numeric_data$Group <- group
+    data <- numeric_data
+    
+  } else if (transform == "CLR") {
+    
+    group <- data$Group
+    
+    numeric_data <- data %>% dplyr::select(-Group)
+   
+    numeric_replaced <- cmultRepl(numeric_data, label = 0, method = "CZM")
+    
+    clr_data <- clr(acomp(numeric_replaced))
+     
+    clr_data <- as.data.frame(clr_data)
+     
+     # Restore variable names
+    colnames(clr_data) <- colnames(numeric_data)
+     
+     # Add Group back
+    clr_data$Group <- group
+     
+     # Replace original data
+    data <- clr_data
+    
+  } else if (transform == "Raw") {
+    
+    # No transformation
+    data <- data
+    
+  } else {
+    
+    stop("transform must be 'Raw', 'Log10', or 'CLR'")
+    
   }
   
   # Train/test split
   set.seed(seed)
   idx <- createDataPartition(data$Group, p = 0.8, list = FALSE)
+  
   train <- data[idx, ]
   test  <- data[-idx, ]
   
@@ -110,37 +153,64 @@ run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
   
   # Predict on test set
   preds <- predict(rf_model, newdata = test)
+  
   cm <- confusionMatrix(preds, test$Group)
-  acc <- cm$overall["Accuracy"]
+  
+  acc <- as.numeric(cm$overall["Accuracy"])
   
   # Weighted metrics
   true <- test$Group
   pred <- preds
   
-  # Calculate class-wise F1, precision, recall, weighted by class frequency
-  class_counts <- table(true)
-  class_weights <- class_counts / sum(class_counts)
+  # Extract class-level metrics from confusion matrix
+  by_class <- cm$byClass
   
-  f1_scores <- sapply(levels(true), function(cls) {
-    F1_Score(y_true = as.numeric(true == cls),
-             y_pred = as.numeric(pred == cls))
-  })
+  # Make sure results are handled consistently for multiclass data
+  if (is.null(dim(by_class))) {
+    
+    precision_scores <- as.numeric(by_class["Pos Pred Value"])
+   
+    recall_scores <- as.numeric(by_class["Sensitivity"])
+    
+    f1_scores <- 2 * precision_scores * recall_scores /
+      (precision_scores + recall_scores)
+    
+    class_counts <- table(true)
+    class_weights <- as.numeric(class_counts) / sum(class_counts)
+    
+  } else {
+    
+    precision_scores <- by_class[, "Pos Pred Value"]
+    recall_scores <- by_class[, "Sensitivity"]
+    
+    f1_scores <- 2 * precision_scores * recall_scores /
+      (precision_scores + recall_scores)
+    
+    class_counts <- table(true)
+    class_weights <- as.numeric(class_counts) / sum(class_counts)
+  }
   
-  precision_scores <- sapply(levels(true), function(cls) {
-    Precision(y_true = as.numeric(true == cls),
-              y_pred = as.numeric(pred == cls))
-  })
+  # Remove undefined values if a class has no predicted observations
+  valid <- is.finite(f1_scores) &
+    is.finite(precision_scores) &
+    is.finite(recall_scores)
   
-  recall_scores <- sapply(levels(true), function(cls) {
-    Recall(y_true = as.numeric(true == cls),
-           y_pred = as.numeric(pred == cls))
-  })
+  weighted_f1 <- sum(f1_scores[valid] * class_weights[valid]) /
+    sum(class_weights[valid])
   
-  weighted_f1 <- sum(f1_scores * class_weights)
-  weighted_precision <- sum(precision_scores * class_weights)
-  weighted_recall <- sum(recall_scores * class_weights)
+  weighted_precision <- sum(precision_scores[valid] * class_weights[valid]) /
+    sum(class_weights[valid])
   
-  cat(sprintf("Accuracy: %.2f%% | Weighted F1: %.3f\n", acc * 100, weighted_f1))
+  weighted_recall <- sum(recall_scores[valid] * class_weights[valid]) /
+    sum(class_weights[valid])
+  
+  cat(sprintf(
+    "Accuracy: %.2f%% | Weighted F1: %.3f | Weighted Precision: %.3f | Weighted Recall: %.3f\n",
+    acc * 100,
+    weighted_f1,
+    weighted_precision,
+    weighted_recall
+  ))
   
   # Variable importance
   var_imp <- varImp(rf_model, scale = TRUE)$importance
@@ -166,28 +236,56 @@ run_rf_test <- function(data, transform = FALSE, balance = FALSE, seed = 123) {
 #----------------------------------------------------------
 # Run all configurations
 #----------------------------------------------------------
-configs <- expand.grid(transform = c(FALSE, TRUE),
-                       balance = c(FALSE, TRUE))
+configs <- expand.grid(
+  transform = c("Raw", "Log10", "CLR"),
+  balance = c(FALSE, TRUE),
+  stringsAsFactors = FALSE)
 
 results <- lapply(1:nrow(configs), function(i) {
+  
   cat("\n=============================\n")
-  cat("Running configuration", i, "of", nrow(configs), "\n")
+  cat(
+    "Running configuration",
+    i,
+    "of",
+    nrow(configs),
+    "\n")
   cat("=============================\n")
-  run_rf_test(laicpms,
-              transform = configs$transform[i],
-              balance = configs$balance[i])
+  
+  run_rf_test(
+    laicpms,
+    transform = as.character(configs$transform[i]),
+    balance = configs$balance[i])
 })
 
 #----------------------------------------------------------
 # Summarize results
 #----------------------------------------------------------
 summary_df <- data.frame(
-  Transform = sapply(results, function(x) ifelse(x$transform, "Log10", "Raw")),
-  Balanced = sapply(results, function(x) ifelse(x$balance, "Yes", "No")),
-  Accuracy = sapply(results, function(x) round(x$accuracy * 100, 2)),
-  Weighted_F1 = sapply(results, function(x) round(x$f1_weighted, 3)),
-  Weighted_Precision = sapply(results, function(x) round(x$precision_weighted, 3)),
-  Weighted_Recall = sapply(results, function(x) round(x$recall_weighted, 3))
+  
+  Transform = sapply(
+    results,
+    function(x) x$transform),
+  
+  Balanced = sapply(
+    results,
+    function(x) ifelse(x$balance, "Yes", "No")),
+  
+  Accuracy = sapply(
+    results,
+    function(x) round(x$accuracy * 100, 2)),
+  
+  Weighted_F1 = sapply(
+    results,
+    function(x) round(x$f1_weighted, 3)),
+  
+  Weighted_Precision = sapply(
+    results,
+    function(x) round(x$precision_weighted, 3)),
+  
+  Weighted_Recall = sapply(
+    results,
+    function(x) round(x$recall_weighted, 3))
 )
 
 print(summary_df)

@@ -1,5 +1,5 @@
 #---------------------------------------------------------
-#Results of comparing LDA and RF applications to NAA and LAICPMS
+# Results of comparing LDA and RF applications to NAA and LAICPMS
 #----------------------------------------------------------
 # Install patchwork if needed
 install.packages("patchwork")
@@ -13,14 +13,13 @@ library(patchwork)
 data <- data.frame(
   Group = c("NAA", "LA-ICP-MS", "NAA", "LA-ICP-MS"),
   Method = c("RF", "RF", "LDA", "LDA"),
-  Accuracy = c(80, 70, 70, 70),
-  F1 = c(95.6, 93.8, 60, 66)
-)
+  Accuracy = c(80, 70, 70, 60),
+  F1 = c(83.7, 76.7, 66.0, 46.7)
+) # insert results from LDA and RF into this table
 
-data
 
 ##------------------------------------------
-#plot accuracy
+# Plot accuracy
 #-------------------------------------------
 # Keep only Accuracy
 accuracy_data <- data %>%
@@ -32,7 +31,7 @@ colors <- c("NAA" = "#FF5733", "LA-ICP-MS" = "orange")
 # Vertical bar plot for accuracy
 P1 <- ggplot(accuracy_data, aes(x = Method, y = Accuracy, fill = Group)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.5, alpha = 0.7) +
-  geom_hline(yintercept = 60, linetype = "dashed", color = "black", size = 0.6) +
+  geom_hline(yintercept = 60, linetype = "dashed", color = "black", linewidth = 0.4) +
   scale_fill_manual(values = colors) +
   coord_cartesian(ylim = c(0, 100)) +
   labs(
@@ -41,7 +40,7 @@ P1 <- ggplot(accuracy_data, aes(x = Method, y = Accuracy, fill = Group)) +
     y = "Accuracy (%)",
     fill = ""
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(face = "bold", hjust = 0.5),
     axis.text.x = element_text(face = "bold"),
@@ -51,7 +50,7 @@ P1 <- ggplot(accuracy_data, aes(x = Method, y = Accuracy, fill = Group)) +
 
 
 ##------------------------------------------
-#plot Weighted F1
+# Plot Weighted F1
 #-------------------------------------------
 # Keep only Accuracy
 F1_data <- data %>%
@@ -60,7 +59,7 @@ F1_data <- data %>%
 # Vertical bar plot
 P2 <- ggplot(F1_data, aes(x = Method, y = F1, fill = Group)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.5, alpha = 0.7) +
-  geom_hline(yintercept = 60, linetype = "dashed", color = "black", size = 0.6) +
+  geom_hline(yintercept = 60, linetype = "dashed", color = "black", linewidth = 0.4) +
   scale_fill_manual(values = colors) +
   coord_cartesian(ylim = c(0, 100)) +
   labs(
@@ -69,7 +68,7 @@ P2 <- ggplot(F1_data, aes(x = Method, y = F1, fill = Group)) +
     y = "Weighted F1 (%)",
     fill = ""
   ) +
-  theme_minimal(base_size = 14) +
+  theme_minimal(base_size = 12) +
   theme(
     plot.title = element_text(face = "bold", hjust = 0.5),
     axis.text.x = element_text(face = "bold"),
